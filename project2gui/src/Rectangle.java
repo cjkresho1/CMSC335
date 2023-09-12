@@ -2,9 +2,10 @@ import java.awt.Graphics;
 
 /**
  * Rectangle.java 
- * Date: 08.29.2023
+ * Date: 09.12.2023
  * @author Charles Kresho
  * Purpose: Represent and calculate the area of a Rectangle.
+ *          Is also a JPanel that paints a rectangle to itself.
  */
 public class Rectangle extends TwoDimensionalShape {
 
@@ -22,6 +23,7 @@ public class Rectangle extends TwoDimensionalShape {
         this.height = height;
     }
 
+    @Override
     public void paint(Graphics g) {
         super.paint(g);
         g.fillRect(0, 0, (int) length * 2, (int) height * 2);

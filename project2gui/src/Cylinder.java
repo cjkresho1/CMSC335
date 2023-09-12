@@ -3,9 +3,10 @@ import java.io.IOException;
 
 /**
  * Cylinder.java 
- * Date: 08.29.2023
+ * Date: 09.12.2023
  * @author Charles Kresho
  * Purpose: Represent and calculate the volume of a Cylinder.
+ *          Is also a JPanel that paints a png of a Cylinder to itself. 
  */
 public class Cylinder extends ThreeDimensionalShape {
 

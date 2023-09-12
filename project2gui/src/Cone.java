@@ -3,9 +3,10 @@ import java.io.IOException;
 
 /**
  * Cone.java 
- * Date: 08.29.2023
+ * Date: 09.12.2023
  * @author Charles Kresho
  * Purpose: Represent and calculate the volume of a Cone. Assumed to be a right triangluar cone.
+ *          Is also a JPanel that paints a png of a Cone to itself.
  */
 public class Cone extends ThreeDimensionalShape {
 

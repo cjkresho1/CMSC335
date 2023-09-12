@@ -3,9 +3,10 @@ import java.io.IOException;
 
 /**
  * Sphere.java 
- * Date: 08.29.2023
+ * Date: 09.12.2023
  * @author Charles Kresho
  * Purpose: Represent and calculate the volume of a Sphere.
+ *          Is also a JPanel that paints a png of a Sphere to itself. 
  */
 public class Sphere extends ThreeDimensionalShape {
 

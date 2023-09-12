@@ -7,7 +7,7 @@ import javax.imageio.ImageIO;
 
 /**
  * ThreeDimensionalShape.java 
- * Date: 08.29.2023
+ * Date: 09.12.2023
  * @author Charles Kresho
  * Purpose: Represent a three dimensional shape, and store all information of one. 
  */
@@ -19,7 +19,8 @@ class ThreeDimensionalShape extends Shape {
      * Create a new ThreeDimensionalShape object
      * @param shapeName_ name of the shape
      * @param volume_ volume of the shape
-     * @throws IOException
+     * @param imageLocation Absolute path to the image to be displayed
+     * @throws IOException If the image file cannot be opened.
      */
     public ThreeDimensionalShape(String shapeName_, double volume_, String imageLocation) throws IOException {
         super(3, shapeName_, "volume", volume_);

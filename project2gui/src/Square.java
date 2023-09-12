@@ -2,9 +2,10 @@ import java.awt.Graphics;
 
 /**
  * Square.java 
- * Date: 08.29.2023
+ * Date: 09.12.2023
  * @author Charles Kresho
  * Purpose: Represent and calculate the area of a Square. Assumed to have equal length sides.
+ *          Is also a JPanel that paints an image of a Square to itself.
  */
 public class Square extends TwoDimensionalShape {
 
@@ -19,6 +20,7 @@ public class Square extends TwoDimensionalShape {
         this.length = length;
     }
 
+    @Override
     public void paint(Graphics g) {
         super.paint(g);
         g.fillRect(0, 0, (int) length * 2, (int) length * 2);

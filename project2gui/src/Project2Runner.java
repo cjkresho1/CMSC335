@@ -1,9 +1,9 @@
 
 /**
- * ProjectRunner.java 
- * Date: 08.29.2023
+ * Project2Runner.java 
+ * Date: 09.12.2023
  * @author Charles Kresho
- * Purpose: To provide a command line interface for the user to calculate the area/volume of various shapes.
+ * Purpose: To provide a GUI interface for the user to calculate the area/volume of various shapes.
  */
 
 import java.awt.BorderLayout;
@@ -36,6 +36,8 @@ public class Project2Runner implements ItemListener {
     // An "on" flag indicates that the respective shape uses that field in its calculation
     private static final int[] shapeFieldFlags = { 0b000001, 0b000110, 0b000010, 0b000110, 0b000001, 0b001110, 0b000101,
             0b000101, 0b110000 };
+
+    // Global JPanel items so they can be used in different methods to position and reposition
     private JPanel circleCard, rectangleCard, squareCard, triangleCard, sphereCard, cubeCard, coneCard, cylinderCard,
             torusCard;
     private JTextField radiusField, lengthField, heightField, widthField, majorRadiusField, minorRadiusField;
@@ -45,7 +47,10 @@ public class Project2Runner implements ItemListener {
 
     private String curCard = "Circle";
 
-    public void addComponentToPane(Container pane) {
+    
+    private void addComponentToPane(Container pane) {
+
+        // Create a Drop Down Box to navigate through the different cards.
         JPanel comboBoxPane = new JPanel();
         JComboBox<String> cb = new JComboBox<String>(shapeOptions);
         cb.setEditable(false);
@@ -60,38 +65,33 @@ public class Project2Runner implements ItemListener {
         exitButton.addActionListener(new ExitHandler());
 
         // Create all text fields and labels, for use on all panels
+
         radiusField = new JTextField(10);
-        // Will be centered and far right in its location
         radiusFieldLabel = new JLabel("Radius: ");
         radiusFieldLabel.setVerticalAlignment(JLabel.CENTER);
         radiusFieldLabel.setHorizontalAlignment(JLabel.RIGHT);
 
         lengthField = new JTextField(10);
-        // Will be centered and far right in its location
         lengthFieldLabel = new JLabel("Length: ");
         lengthFieldLabel.setVerticalAlignment(JLabel.CENTER);
         lengthFieldLabel.setHorizontalAlignment(JLabel.RIGHT);
 
         heightField = new JTextField(10);
-        // Will be centered and far right in its location
         heightFieldLabel = new JLabel("Height: ");
         heightFieldLabel.setVerticalAlignment(JLabel.CENTER);
         heightFieldLabel.setHorizontalAlignment(JLabel.RIGHT);
 
         widthField = new JTextField(10);
-        // Will be centered and far right in its location
         widthFieldLabel = new JLabel("Width: ");
         widthFieldLabel.setVerticalAlignment(JLabel.CENTER);
         widthFieldLabel.setHorizontalAlignment(JLabel.RIGHT);
 
         majorRadiusField = new JTextField(10);
-        // Will be centered and far right in its location
         majorRadiusLabel = new JLabel("Major Radius: ");
         majorRadiusLabel.setVerticalAlignment(JLabel.CENTER);
         majorRadiusLabel.setHorizontalAlignment(JLabel.RIGHT);
 
         minorRadiusField = new JTextField(10);
-        // Will be centered and far right in its location
         minorRadiusLabel = new JLabel("Minor Radius: ");
         minorRadiusLabel.setVerticalAlignment(JLabel.CENTER);
         minorRadiusLabel.setHorizontalAlignment(JLabel.RIGHT);
@@ -147,10 +147,13 @@ public class Project2Runner implements ItemListener {
         pane.add(cards, BorderLayout.CENTER);
     }
 
+    @Override
     public void itemStateChanged(ItemEvent evt) {
+        // Whenever the dropbox selection changes, show the selected card
         CardLayout cl = (CardLayout) (cards.getLayout());
         cl.show(cards, (String) evt.getItem());
 
+        // Determine the newly selected card...
         curCard = (String) evt.getItem();
         shapeAttributeLabel.setText("Click to display the shape!");
         int curShapeIndex = -1;
@@ -160,6 +163,7 @@ public class Project2Runner implements ItemListener {
                 break;
             }
         }
+        // And redraw the selected card
         switch (curShapeIndex) {
         case 0: // Circle
             drawCircleCard();
@@ -188,15 +192,17 @@ public class Project2Runner implements ItemListener {
         case 8: // Torus
             drawTorusCard();
             break;
-
         default: //Should never happen
             JOptionPane.showMessageDialog(window, "Shape selection error; please contact a developer.", "Type Error",
                     JOptionPane.ERROR_MESSAGE);
         }
 
+        // Resize the window to be the minimum possible size
         window.pack();
     }
 
+    /**************************************REDRAW HELPER METHOD SECTION*************************************/
+    /*****Methods here reposition the components for the card, in case they got stolen by another card.*****/
     private void drawCircleCard() {
         GridBagConstraints cons = new GridBagConstraints();
         cons.insets = new Insets(5, 5, 5, 5);
@@ -506,6 +512,8 @@ public class Project2Runner implements ItemListener {
 
     private class CalculateHandeler implements ActionListener {
         public void actionPerformed(ActionEvent e) {
+
+            // Determine which shape is currently active
             int curShapeIndex = -1;
             for (int i = 0; i < shapeOptions.length; i++) {
                 if (curCard.equalsIgnoreCase(shapeOptions[i])) {
@@ -514,6 +522,7 @@ public class Project2Runner implements ItemListener {
                 }
             }
 
+            // Get the text from all field boxes.
             String radiusString = radiusField.getText();
             String lengthString = lengthField.getText();
             String heightString = heightField.getText();
@@ -531,6 +540,9 @@ public class Project2Runner implements ItemListener {
 
             // Try/catch clause envelops entire switch case to avoid extra printing of status messages from within.
             try {
+
+                /*****These conditionals use the flags set for each shape to determine  *****/
+                /*****which fields are required by the shape.                           *****/
                 if ((shapeFieldFlags[curShapeIndex] & 0b000001) == 0b000001) {
                     try {
                         radius = Double.parseDouble(radiusString);
@@ -638,15 +650,16 @@ public class Project2Runner implements ItemListener {
                                 JOptionPane.ERROR_MESSAGE);
                     }
                 }
-
+                // If any fields were not valid, exit the calculation without doing anything.
                 if (!validFields) {
                     return;
                 }
 
+                // Prepare a Dialog box to hold the shape rendering.
                 JDialog shapeFrame = new JDialog(window, false);
-
                 Shape curShape = null;
 
+                // Render the required shape
                 switch (curShapeIndex) {
                 case 0: // Circle
                     curShape = new Circle(radius);
@@ -675,14 +688,13 @@ public class Project2Runner implements ItemListener {
                 case 8: // Torus
                     curShape = new Torus(majorR, minorR);
                     break;
-
                 default: //Should never happen
                     JOptionPane.showMessageDialog(window, "Shape selection error; please contact a developer.",
                             "Type Error", JOptionPane.ERROR_MESSAGE);
                 }
 
+                // Place the shape in the dialog box, size and position the box. 
                 shapeAttributeLabel.setText(curShape.toString());
-
                 shapeFrame.setTitle(curShape.getShapeName());
                 shapeFrame.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
                 shapeFrame.setSize(800, 800);
@@ -692,7 +704,6 @@ public class Project2Runner implements ItemListener {
                 shapeFrame.add(curShape);
                 shapeFrame.setVisible(true);
             }
-
             catch (InvalidTorusAttributesException exception) {
                 JOptionPane.showMessageDialog(window, exception.getMessage(), "Type Error", JOptionPane.ERROR_MESSAGE);
             }

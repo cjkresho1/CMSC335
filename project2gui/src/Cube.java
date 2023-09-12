@@ -3,9 +3,10 @@ import java.io.IOException;
 
 /**
  * Cube.java 
- * Date: 08.29.2023
+ * Date: 09.12.2023
  * @author Charles Kresho
  * Purpose: Represent and calculate the volume of a Cube. Assumed to not have equal length sides.
+ *          Is also a JPanel that paints a png of a Cube to itself.
  */
 public class Cube extends ThreeDimensionalShape {
 

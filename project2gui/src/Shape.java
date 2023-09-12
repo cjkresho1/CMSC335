@@ -2,7 +2,7 @@ import javax.swing.JPanel;
 
 /**
  * Shape.java 
- * Date: 08.29.2023
+ * Date: 09.12.2023
  * @author Charles Kresho
  * Purpose: Represent and store the information of a shape.
  */

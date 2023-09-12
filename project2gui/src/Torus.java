@@ -3,9 +3,10 @@ import java.io.IOException;
 
 /**
  * Torus.java 
- * Date: 08.29.2023
+ * Date: 09.12.2023
  * @author Charles Kresho
  * Purpose: Represent and calculate the volume of a Torus.
+ *          Is also a JPanel that paints a png of a Torus to itself.
  */
 public class Torus extends ThreeDimensionalShape {
 
