@@ -1,3 +1,10 @@
+import java.awt.Graphics;
+import java.awt.Image;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+
 /**
  * ThreeDimensionalShape.java 
  * Date: 08.29.2023
@@ -6,15 +13,24 @@
  */
 class ThreeDimensionalShape extends Shape {
     private double volume;
+    private Image img;
 
     /**
      * Create a new ThreeDimensionalShape object
      * @param shapeName_ name of the shape
      * @param volume_ volume of the shape
+     * @throws IOException
      */
-    public ThreeDimensionalShape(String shapeName_, double volume_) {
+    public ThreeDimensionalShape(String shapeName_, double volume_, String imageLocation) throws IOException {
         super(3, shapeName_, "volume", volume_);
+        File imageFile = new File(imageLocation);
+        img = ImageIO.read(imageFile);
         volume = volume_;
+    }
+
+    public void paint(Graphics g) {
+        super.paint(g);
+        g.drawImage(img, 0, 0, null);
     }
 
     /**

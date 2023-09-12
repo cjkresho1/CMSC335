@@ -1,10 +1,12 @@
+import javax.swing.JPanel;
+
 /**
  * Shape.java 
  * Date: 08.29.2023
  * @author Charles Kresho
  * Purpose: Represent and store the information of a shape.
  */
-public class Shape {
+public class Shape extends JPanel {
     private int numberOfDimensions;
     private String shapeName;
     private String attributeName;

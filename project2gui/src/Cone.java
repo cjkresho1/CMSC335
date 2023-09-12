@@ -1,3 +1,6 @@
+import java.io.File;
+import java.io.IOException;
+
 /**
  * Cone.java 
  * Date: 08.29.2023
@@ -10,9 +13,10 @@ public class Cone extends ThreeDimensionalShape {
      * Create a new Cone object.
      * @param radius radius of the cone
      * @param height height of the cone
+     * @throws IOException
      */
-    public Cone(double radius, double height) {
-        super("Cone", calculateVolume(radius, height));
+    public Cone(double radius, double height) throws IOException {
+        super("Cone", calculateVolume(radius, height), "imageFiles" + File.separator + "Cone.png");
     }
 
     private static double calculateVolume(double radius, double height) {

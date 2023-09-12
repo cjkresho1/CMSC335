@@ -1,3 +1,6 @@
+import java.io.File;
+import java.io.IOException;
+
 /**
  * Sphere.java 
  * Date: 08.29.2023
@@ -9,9 +12,10 @@ public class Sphere extends ThreeDimensionalShape {
     /**
      * Create a new Sphere object
      * @param radius radius of the sphere
+     * @throws IOException
      */
-    public Sphere(double radius) {
-        super("Sphere", calculateVolume(radius));
+    public Sphere(double radius) throws IOException {
+        super("Sphere", calculateVolume(radius), "imageFiles" + File.separator + "Sphere.png");
     }
 
     private static double calculateVolume(double radius) {

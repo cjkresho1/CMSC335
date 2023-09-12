@@ -1,3 +1,5 @@
+import java.awt.Graphics;
+
 /**
  * Square.java 
  * Date: 08.29.2023
@@ -6,12 +8,19 @@
  */
 public class Square extends TwoDimensionalShape {
 
+    private double length;
+
     /**
      * Create a new Square object
      * @param length length (and height) of the Square
      */
     public Square(double length) {
-        super("Circle", calculateArea(length));
+        super("Square", calculateArea(length));
+    }
+
+    public void paint(Graphics g) {
+        super.paint(g);
+        g.fillRect(0, 0, (int) length, (int) length);
     }
 
     public static double calculateArea(double length) {

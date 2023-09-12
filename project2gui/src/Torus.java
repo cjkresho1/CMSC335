@@ -1,3 +1,6 @@
+import java.io.File;
+import java.io.IOException;
+
 /**
  * Torus.java 
  * Date: 08.29.2023
@@ -11,9 +14,10 @@ public class Torus extends ThreeDimensionalShape {
      * @param majorRadius distance from the center of the torus to the center of the torus's ring
      * @param minorRadius radius of the torus's ring
      * @throws InvalidTorusAttributesException if minor radius is greater than major radiusF
+     * @throws IOException
      */
-    public Torus(double majorRadius, double minorRadius) throws InvalidTorusAttributesException {
-        super("Torus", calculateVolume(majorRadius, minorRadius));
+    public Torus(double majorRadius, double minorRadius) throws InvalidTorusAttributesException, IOException {
+        super("Torus", calculateVolume(majorRadius, minorRadius), "imageFiles" + File.separator + "Torus.png");
     }
 
     private static double calculateVolume(double majorRadius, double minorRadius)
