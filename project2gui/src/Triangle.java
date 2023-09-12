@@ -18,12 +18,14 @@ public class Triangle extends TwoDimensionalShape {
      */
     public Triangle(double length, double height) {
         super("Triangle", calculateArea(length, height));
+        this.length = length;
+        this.height = height;
     }
 
     public void paint(Graphics g) {
         super.paint(g);
-        int[] x = { 0, (int) (length / 2), (int) length };
-        int[] y = { (int) height, 0, (int) height };
+        int[] x = { 0, (int) (length * 2 / 2), (int) length * 2 };
+        int[] y = { (int) height * 2, 0, (int) height * 2 };
         g.fillPolygon(x, y, 3);
     }
 

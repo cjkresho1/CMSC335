@@ -18,11 +18,13 @@ public class Rectangle extends TwoDimensionalShape {
      */
     public Rectangle(double length, double height) {
         super("Rectangle", calculateArea(length, height));
+        this.length = length;
+        this.height = height;
     }
 
     public void paint(Graphics g) {
         super.paint(g);
-        g.fillRect(0, 0, (int) length, (int) height);
+        g.fillRect(0, 0, (int) length * 2, (int) height * 2);
     }
 
     public static double calculateArea(double length, double height) {

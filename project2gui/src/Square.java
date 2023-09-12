@@ -16,11 +16,12 @@ public class Square extends TwoDimensionalShape {
      */
     public Square(double length) {
         super("Square", calculateArea(length));
+        this.length = length;
     }
 
     public void paint(Graphics g) {
         super.paint(g);
-        g.fillRect(0, 0, (int) length, (int) length);
+        g.fillRect(0, 0, (int) length * 2, (int) length * 2);
     }
 
     public static double calculateArea(double length) {
