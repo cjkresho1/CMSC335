@@ -1,0 +1,11 @@
+eclipseWorkspace/.metadata/**
+**/.classpath
+**/.project
+**/.settings/**
+*.class
+**/.vscode/**
+**/doc/**
+*.pdb
+*.ilk
+*.obj
+*.exe
