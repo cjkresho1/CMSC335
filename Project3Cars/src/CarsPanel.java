@@ -9,6 +9,8 @@ public class CarsPanel extends JPanel {
 
     public CarsPanel() {
         // TODO Finish CarsPanel constructor
+
+        cars = new ArrayList<AnimatedCar>();
     }
 
     @Override

@@ -3,8 +3,10 @@ import java.io.File;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
-public class AnimatedCar implements Runnable {
+public class AnimatedCar implements Runnable, ChangeListener {
     private BufferedImage car;
     private double xPos;
     private double yPos;
@@ -34,6 +36,12 @@ public class AnimatedCar implements Runnable {
                 xPos += xVelocity;
             }
         }
+    }
+
+    @Override
+    public void stateChanged(ChangeEvent e) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'stateChanged'");
     }
 
     public BufferedImage getCar() {
@@ -70,7 +78,5 @@ public class AnimatedCar implements Runnable {
 
     public void setMoving(boolean isMoving) {
         this.isMoving = isMoving;
-    }
-
-    
+    }    
 }
