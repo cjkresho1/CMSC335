@@ -9,3 +9,4 @@ eclipseWorkspace/.metadata/**
 *.ilk
 *.obj
 *.exe
+**/CodeZip/**

@@ -551,6 +551,7 @@ public class Project2Runner implements ItemListener {
                         }
                     }
                     catch (NegativeAttributeException exception) {
+                        validFields = false;
                         JOptionPane.showMessageDialog(window, exception.getMessage(), "Type Error",
                                 JOptionPane.ERROR_MESSAGE);
                     }
@@ -569,6 +570,7 @@ public class Project2Runner implements ItemListener {
                         }
                     }
                     catch (NegativeAttributeException exception) {
+                        validFields = false;
                         JOptionPane.showMessageDialog(window, exception.getMessage(), "Type Error",
                                 JOptionPane.ERROR_MESSAGE);
                     }
@@ -587,6 +589,7 @@ public class Project2Runner implements ItemListener {
                         }
                     }
                     catch (NegativeAttributeException exception) {
+                        validFields = false;
                         JOptionPane.showMessageDialog(window, exception.getMessage(), "Type Error",
                                 JOptionPane.ERROR_MESSAGE);
                     }
@@ -605,6 +608,7 @@ public class Project2Runner implements ItemListener {
                         }
                     }
                     catch (NegativeAttributeException exception) {
+                        validFields = false;
                         JOptionPane.showMessageDialog(window, exception.getMessage(), "Type Error",
                                 JOptionPane.ERROR_MESSAGE);
                     }
@@ -623,6 +627,7 @@ public class Project2Runner implements ItemListener {
                         }
                     }
                     catch (NegativeAttributeException exception) {
+                        validFields = false;
                         JOptionPane.showMessageDialog(window, exception.getMessage(), "Type Error",
                                 JOptionPane.ERROR_MESSAGE);
                     }
@@ -641,6 +646,7 @@ public class Project2Runner implements ItemListener {
                         }
                     }
                     catch (NegativeAttributeException exception) {
+                        validFields = false;
                         JOptionPane.showMessageDialog(window, exception.getMessage(), "Type Error",
                                 JOptionPane.ERROR_MESSAGE);
                     }
