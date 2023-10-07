@@ -1,6 +1,9 @@
 // TODO Document
 
 import java.util.Random;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class AnimatedLight implements Runnable {
     private int xPos;
@@ -9,6 +12,8 @@ public class AnimatedLight implements Runnable {
     private boolean isPaused, terminate;
     private double timeRemainingSec;
     Random rand;
+    private final Lock lock = new ReentrantLock();
+    private final Condition unpauseCondition = lock.newCondition();
 
     public AnimatedLight(int x, int y) {
         xPos = x;
@@ -26,7 +31,11 @@ public class AnimatedLight implements Runnable {
                 break;
             }
 
-            if (!isPaused) {
+            lock.lock();
+            try {
+                while (isPaused) {
+                    unpauseCondition.await();
+                }
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
@@ -54,6 +63,9 @@ public class AnimatedLight implements Runnable {
                             break;
                     }
                 }
+            } catch (InterruptedException e) {
+            } finally {
+                lock.unlock();
             }
         }
     }
@@ -66,7 +78,10 @@ public class AnimatedLight implements Runnable {
 
     public void unpause() {
         while (isPaused) {
+            lock.lock();
             isPaused = false;
+            unpauseCondition.signalAll();
+            lock.unlock();
         }
 
     }
