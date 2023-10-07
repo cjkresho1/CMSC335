@@ -24,6 +24,8 @@ public class ButtonsPanel extends JPanel {
     private JButton startStopButton, pauseResumeButton, addCarButton, removeCarButton, addLightButton,
             removeLightButton;
 
+    private static final int MAX_CARS_AND_LIGHTS = 5;
+
     public ButtonsPanel() {
         // Create the buttons
         startStopButton = new JButton("Start");
@@ -53,8 +55,8 @@ public class ButtonsPanel extends JPanel {
 
         topPanel = new JPanel();
         bottomPanel = new JPanel();
-        topPanel.setLayout(new FlowLayout());
-        bottomPanel.setLayout(new FlowLayout());
+        topPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        bottomPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 
         topPanel.add(startStopButton);
         topPanel.add(pauseResumeButton);
@@ -111,28 +113,28 @@ public class ButtonsPanel extends JPanel {
 
     private class AddCarHandeler implements ActionListener {
         public void actionPerformed(ActionEvent e) {
-            numCars++;
+            numCars = Math.min(MAX_CARS_AND_LIGHTS, numCars + 1);
             fireStateChanged();
         }
     }
 
     private class RemoveCarHandeler implements ActionListener {
         public void actionPerformed(ActionEvent e) {
-            numCars--;
+            numCars = Math.max(0, numCars - 1);
             fireStateChanged();
         }
     }
 
     private class AddLightHandeler implements ActionListener {
         public void actionPerformed(ActionEvent e) {
-            numLights++;
+            numLights = Math.min(MAX_CARS_AND_LIGHTS, numLights + 1);
             fireStateChanged();
         }
     }
 
     private class RemoveLightHandeler implements ActionListener {
         public void actionPerformed(ActionEvent e) {
-            numLights--;
+            numLights = Math.max(0, numLights - 1);
             fireStateChanged();
         }
     }

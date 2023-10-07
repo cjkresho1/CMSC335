@@ -10,6 +10,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.EventListenerList;
 
 // TODO Document
 
@@ -18,12 +19,15 @@ public class CarsPanel extends JPanel implements ChangeListener {
     private ArrayList<AnimatedCar> cars;
     private ArrayList<AnimatedLight> lights;
     private ButtonsPanel sourcePanel;
+    private ChangeEvent changeEvent = null;
+    private EventListenerList listenerList = new EventListenerList();
 
-    private static int CAR_SPACING_PIXELS = 100;
-    private static int CAR_VERT_START_PIXELS = 50;
-    private static int LIGHT_SPACING_PIXELS = 200;
+    private static final int CAR_SPACING_PIXELS = 100;
+    private static final int CAR_VERT_START_PIXELS = 50;
+    private static final int LIGHT_SPACING_PIXELS = 200;
     private static int LIGHT_HORI_START_PIXELS;
-    private static int STOP_LIGHT_DIAMETER = 10;
+    private static final int STOP_LIGHT_DIAMETER = 10;
+    private static final int CAR_MAX_SPEED_PIXELS = 5;
 
     public CarsPanel(ButtonsPanel source) {
 
@@ -57,8 +61,51 @@ public class CarsPanel extends JPanel implements ChangeListener {
 
     @Override
     public void stateChanged(ChangeEvent e) {
-        // TODO Lights and Cars are updated when needed
+        // If there are less cars then specified, add more cars to make up for it.
+        Random rand = new Random();
+        System.out.println("Pre-change:");
+        System.out.println("cars.size(): " + cars.size());
+        System.out.println("sourcePanel.getNumCars(): " + sourcePanel.getNumCars());
+        System.out.println("lights.size(): " + lights.size());
+        System.out.println("sourcePanel.getNumLights(): " + sourcePanel.getNumLights());
+        for (int i = cars.size(); i < sourcePanel.getNumCars(); i++)
+        {
+            try {
+                cars.add(new AnimatedCar(0, ((i * CAR_SPACING_PIXELS) + CAR_VERT_START_PIXELS), (rand.nextDouble() * CAR_MAX_SPEED_PIXELS),
+                            true));
+            } catch (IOException e1) {
+                System.out.println("Error getting car image file.");
+            }
+        }
+
+        // If there are more cars than specified, remove ones off the end
+        for (int i = cars.size(); i > sourcePanel.getNumCars(); i--)
+        {
+            cars.remove(i - 1);
+        }
+
+        // If there are less lights than specified, add more lights ot make up for it. 
+        for (int i = lights.size(); i < sourcePanel.getNumLights(); i++)
+        {
+            lights.add(new AnimatedLight(((i * LIGHT_SPACING_PIXELS) + LIGHT_HORI_START_PIXELS), 0));
+        }
+
+        // If there are more lights than specified, remove ones off the end
+        for (int i = lights.size(); i > sourcePanel.getNumLights(); i--)
+        {
+            lights.remove(i - 1);
+        }
         // TODO Lights and Cars all pause and start when needed
+
+        System.out.println("Post-change:");
+        System.out.println("cars.size(): " + cars.size());
+        System.out.println("sourcePanel.getNumCars(): " + sourcePanel.getNumCars());
+        System.out.println("lights.size(): " + lights.size());
+        System.out.println("sourcePanel.getNumLights(): " + sourcePanel.getNumLights() + System.lineSeparator());
+        
+        repaint();
+        setSize(getPreferredSize());
+        fireStateChanged();
     }
 
     @Override
@@ -118,6 +165,30 @@ public class CarsPanel extends JPanel implements ChangeListener {
         for (int i = 0; i < lights.size() + 2; i++) {
             g.drawLine((carImgWidth + (i * LIGHT_SPACING_PIXELS)), carImgHeight,
                     (carImgWidth + (i * LIGHT_SPACING_PIXELS)), (int) windowSize.getHeight());
+        }
+    }
+
+    /*
+     * The rest of this is event handling code copied from
+     * DefaultBoundedRangeModel.
+     */
+    public void addChangeListener(ChangeListener l) {
+        listenerList.add(ChangeListener.class, l);
+    }
+
+    public void removeChangeListener(ChangeListener l) {
+        listenerList.remove(ChangeListener.class, l);
+    }
+
+    protected void fireStateChanged() {
+        Object[] listeners = listenerList.getListenerList();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == ChangeListener.class) {
+                if (changeEvent == null) {
+                    changeEvent = new ChangeEvent(this);
+                }
+                ((ChangeListener) listeners[i + 1]).stateChanged(changeEvent);
+            }
         }
     }
 }

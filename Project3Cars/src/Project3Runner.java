@@ -6,19 +6,24 @@ import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 // TODO Document
 // TODO There shouldn't be a lot more needed here, but let's check just to make sure
 
-public class Project3Runner {
+public class Project3Runner implements ChangeListener {
     private CarsPanel cars;
     private ButtonsPanel buttons;
 
+    private static JFrame frame;
     private JPanel mainPane;
 
     public Project3Runner() {
         buttons = new ButtonsPanel();
         cars = new CarsPanel(buttons);
+
+        cars.addChangeListener(this);
 
         mainPane = new JPanel();
         mainPane.setLayout(new BoxLayout(mainPane, BoxLayout.PAGE_AXIS));
@@ -29,6 +34,17 @@ public class Project3Runner {
         mainPane.add(Box.createRigidArea(new Dimension(0, 5)));
         mainPane.add(cars);
         mainPane.add(Box.createGlue());
+
+        mainPane.setOpaque(true);
+        frame.setContentPane(mainPane);
+
+        frame.pack();
+        frame.setVisible(true);
+    }
+
+    @Override
+    public void stateChanged(ChangeEvent e) {
+        frame.pack();
     }
 
     private static void createAndShowGUI() {
@@ -38,15 +54,11 @@ public class Project3Runner {
             System.out.println("Error setting look and feel");
         }
 
-        JFrame frame = new JFrame("Cars and Stoplights");
+        frame = new JFrame("Cars and Stoplights");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        Project3Runner runner = new Project3Runner();
-        runner.mainPane.setOpaque(true);
-        frame.setContentPane(runner.mainPane);
-
-        frame.pack();
-        frame.setVisible(true);
+        new Project3Runner();
+        
     }
 
     public static void main(String[] args) {
