@@ -12,6 +12,7 @@ public class AnimatedCar implements Runnable {
     private double yPos;
     private double xVelocity;
     private boolean isMoving;
+    private static final String CAR_IMAGE_LOCATION = "imageFiles" + File.separator + "car.png";
 
     /**
      * Create a new AnimatedCar
@@ -26,7 +27,7 @@ public class AnimatedCar implements Runnable {
         yPos = y;
         xVelocity = velocity;
         this.isMoving = isMoving;
-        car = ImageIO.read(new File("car.png"));
+        car = ImageIO.read(new File(CAR_IMAGE_LOCATION));
     }
 
     @Override
@@ -74,4 +75,10 @@ public class AnimatedCar implements Runnable {
     public void setMoving(boolean isMoving) {
         this.isMoving = isMoving;
     }
+
+    public static String getCarImageLocation() {
+        return CAR_IMAGE_LOCATION;
+    }
+
+    
 }

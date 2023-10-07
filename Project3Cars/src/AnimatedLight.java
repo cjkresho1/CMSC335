@@ -1,11 +1,12 @@
 // TODO Document
 public class AnimatedLight implements Runnable {
-    private double xPos;
-    private double yPos;
+    private int xPos;
+    private int yPos;
     private LightState lightState = LightState.GREEN;
 
-    public AnimatedLight() {
-
+    public AnimatedLight(int x, int y) {
+        xPos = x;
+        yPos = y;
     }
 
     @Override
@@ -17,7 +18,7 @@ public class AnimatedLight implements Runnable {
     }
 
     public int getxPos() {
-        return (int) xPos;
+        return xPos;
     }
 
     public void setxPos(int xPos) {
@@ -25,7 +26,7 @@ public class AnimatedLight implements Runnable {
     }
 
     public int getyPos() {
-        return (int) yPos;
+        return yPos;
     }
 
     public void setyPos(int yPos) {
