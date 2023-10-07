@@ -3,10 +3,10 @@ import java.io.File;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
-public class AnimatedCar implements Runnable, ChangeListener {
+// TODO Document
+
+public class AnimatedCar implements Runnable {
     private BufferedImage car;
     private double xPos;
     private double yPos;
@@ -31,17 +31,12 @@ public class AnimatedCar implements Runnable, ChangeListener {
 
     @Override
     public void run() {
+        // TODO Add internal timer to move the car right every, like, 100ms
         while (true) {
             if (isMoving) {
                 xPos += xVelocity;
             }
         }
-    }
-
-    @Override
-    public void stateChanged(ChangeEvent e) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'stateChanged'");
     }
 
     public BufferedImage getCar() {
@@ -78,5 +73,5 @@ public class AnimatedCar implements Runnable, ChangeListener {
 
     public void setMoving(boolean isMoving) {
         this.isMoving = isMoving;
-    }    
+    }
 }

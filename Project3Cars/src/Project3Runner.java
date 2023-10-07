@@ -1,10 +1,14 @@
+import java.awt.Dimension;
+
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
-import java.awt.Dimension;
+
+// TODO Document
+// TODO There shouldn't be a lot more needed here, but let's check just to make sure
 
 public class Project3Runner {
     private CarsPanel cars;
@@ -14,12 +18,12 @@ public class Project3Runner {
 
     public Project3Runner() {
         buttons = new ButtonsPanel();
-        cars = new CarsPanel();
+        cars = new CarsPanel(buttons);
 
         mainPane = new JPanel();
         mainPane.setLayout(new BoxLayout(mainPane, BoxLayout.PAGE_AXIS));
 
-        mainPane.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+        mainPane.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         mainPane.add(Box.createRigidArea(new Dimension(0, 5)));
         mainPane.add(buttons);
         mainPane.add(Box.createRigidArea(new Dimension(0, 5)));
