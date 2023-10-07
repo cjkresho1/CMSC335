@@ -44,7 +44,7 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
         } catch (IOException e) {
             System.out.println("Error getting car image.");
         }
-        // TODO Finish CarsPanel constructor
+        
         sourcePanel = source;
         sourcePanel.addChangeListener(this);
 
@@ -59,8 +59,7 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
         Random rand = new Random();
         try {
             for (int i = 0; i < source.getNumCars(); i++) {
-                cars.add(new AnimatedCar(0, ((i * CAR_SPACING_PIXELS) + CAR_VERT_START_PIXELS), (rand.nextDouble() * 5),
-                        true));
+                cars.add(new AnimatedCar(0, ((i * CAR_SPACING_PIXELS) + CAR_VERT_START_PIXELS), ((rand.nextDouble() * (CAR_MAX_SPEED_PIXELS - 1)) + 1)));
             }
         } catch (IOException e) {
             System.out.println("Error getting car image.");
@@ -102,37 +101,48 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
         } catch (InterruptedException exception) {
             return;
         }
+
         // If there are less cars then specified, add more cars to make up for it.
         Random rand = new Random();
         for (int i = cars.size(); i < sourcePanel.getNumCars(); i++)
         {
             try {
-                cars.add(new AnimatedCar(0, ((i * CAR_SPACING_PIXELS) + CAR_VERT_START_PIXELS), (rand.nextDouble() * CAR_MAX_SPEED_PIXELS),
-                            sourcePanel.isPaused()));
+                AnimatedCar tempCar = new AnimatedCar(0, ((i * CAR_SPACING_PIXELS) + CAR_VERT_START_PIXELS), ((rand.nextDouble() * (CAR_MAX_SPEED_PIXELS - 1)) + 1));
+                cars.add(tempCar);
+                Thread tempThread = new Thread(tempCar, "Car Thread " + i);
+                carThreads.add(tempThread);
             } catch (IOException e1) {
                 System.out.println("Error getting car image file.");
             }
+            
         }
 
         // If there are more cars than specified, remove ones off the end
         for (int i = cars.size(); i > sourcePanel.getNumCars(); i--)
         {
+            cars.get(i - 1).terminate();
             cars.remove(i - 1);
+            carThreads.remove(i - 1);
         }
 
         // If there are less lights than specified, add more lights ot make up for it. 
         for (int i = lights.size(); i < sourcePanel.getNumLights(); i++)
         {
-            lights.add(new AnimatedLight(((i * LIGHT_SPACING_PIXELS) + LIGHT_HORI_START_PIXELS), 0));
+            AnimatedLight tempLight = new AnimatedLight(((i * LIGHT_SPACING_PIXELS) + LIGHT_HORI_START_PIXELS), 0);
+            lights.add(tempLight);
+            Thread tempThread = new Thread(tempLight, "Light Thread " + i);
+            lightThreads.add(tempThread);
         }
 
         // If there are more lights than specified, remove ones off the end
         for (int i = lights.size(); i > sourcePanel.getNumLights(); i--)
         {
+            lights.get(i - 1).terminate();
             lights.remove(i - 1);
+            lightThreads.remove(i - 1);
         }
         
-        // TODO Lights and Cars all pause and start when needed
+        // If the simulation has been starteed/stopped/paused/unpaused, call helper method
         if (!running && sourcePanel.isRunning()) {
             startHelper();
             running = true;
@@ -183,7 +193,31 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
             lightThreads.add(tempThread);
         }
 
-        // TODO Destry and recreat car threads
+        // Remove all existing cars, terminating their threads first
+        for (int i = cars.size() - 1; i >= 0; i--) {
+            AnimatedCar curCar = cars.get(i);
+            curCar.terminate();
+            cars.remove(i);
+        }
+
+        carThreads = new ArrayList<Thread>();
+
+        // Add in new cars (moves to 0 and resets speeds)
+        Random rand = new Random();
+        try {
+            for (int i = 0; i < sourcePanel.getNumCars(); i++) {
+                cars.add(new AnimatedCar(0, ((i * CAR_SPACING_PIXELS) + CAR_VERT_START_PIXELS), ((rand.nextDouble() * (CAR_MAX_SPEED_PIXELS - 1)) + 1)));
+            }
+        } catch (IOException e) {
+            System.out.println("Error getting car image.");
+        }
+
+        // Set back up threads for the lights
+        for (int i = 0; i < cars.size(); i++) {
+            AnimatedCar curCar = cars.get(i);
+            Thread tempThread = new Thread(curCar, "Car Thread " + i);
+            carThreads.add(tempThread);
+        }
     }
 
     private void pause() {
@@ -191,7 +225,9 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
             curLight.pause();
         }
 
-        // TODO Add car pausing
+        for (AnimatedCar curCar : cars) {
+            curCar.pause();
+        }
     }
 
     private void unpause() {
@@ -199,7 +235,9 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
             curLight.unpause();
         }
 
-        // TODO Add car unpausing
+        for (AnimatedCar curCar : cars) {
+            curCar.unpause();
+        }
     }
 
     private void startHelper() {
@@ -207,7 +245,9 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
             curThread.start();
         }
 
-        // TODO Add car Thread starter
+        for (Thread curThread : carThreads) {
+            curThread.start();
+        }
     }
 
     @Override

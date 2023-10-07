@@ -83,7 +83,6 @@ public class AnimatedLight implements Runnable {
             unpauseCondition.signalAll();
             lock.unlock();
         }
-
     }
 
     public void terminate() {
