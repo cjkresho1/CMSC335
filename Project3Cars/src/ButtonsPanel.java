@@ -13,7 +13,7 @@ import javax.swing.event.EventListenerList;
 // TODO Add a ticking clock to the top of the panel (add an extra row for it)
 public class ButtonsPanel extends JPanel {
 
-    private int numCars = 3;
+    private int numCars = 1;
     private int numLights = 3;
     private boolean running = false;
     private boolean paused = false;
@@ -24,7 +24,8 @@ public class ButtonsPanel extends JPanel {
     private JButton startStopButton, pauseResumeButton, addCarButton, removeCarButton, addLightButton,
             removeLightButton;
 
-    private static final int MAX_CARS_AND_LIGHTS = 5;
+    private static final int MAX_CARS = 3;
+    private static final int MAX_LIGHTS = 5;
 
     public ButtonsPanel() {
         // Create the buttons
@@ -113,7 +114,7 @@ public class ButtonsPanel extends JPanel {
 
     private class AddCarHandeler implements ActionListener {
         public void actionPerformed(ActionEvent e) {
-            numCars = Math.min(MAX_CARS_AND_LIGHTS, numCars + 1);
+            numCars = Math.min(MAX_CARS, numCars + 1);
             fireStateChanged();
         }
     }
@@ -127,7 +128,7 @@ public class ButtonsPanel extends JPanel {
 
     private class AddLightHandeler implements ActionListener {
         public void actionPerformed(ActionEvent e) {
-            numLights = Math.min(MAX_CARS_AND_LIGHTS, numLights + 1);
+            numLights = Math.min(MAX_LIGHTS, numLights + 1);
             fireStateChanged();
         }
     }
@@ -137,6 +138,14 @@ public class ButtonsPanel extends JPanel {
             numLights = Math.max(0, numLights - 1);
             fireStateChanged();
         }
+    }
+
+    public boolean isPaused() {
+        return paused;
+    }
+
+    public boolean isRunning() {
+        return running;
     }
 
     /*

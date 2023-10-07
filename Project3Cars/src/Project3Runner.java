@@ -40,6 +40,9 @@ public class Project3Runner implements ChangeListener {
 
         frame.pack();
         frame.setVisible(true);
+
+        Thread carThread = new Thread(cars, "Car Thread");
+        carThread.start();
     }
 
     @Override

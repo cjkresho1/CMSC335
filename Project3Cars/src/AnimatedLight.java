@@ -1,20 +1,79 @@
 // TODO Document
+
+import java.util.Random;
+
 public class AnimatedLight implements Runnable {
     private int xPos;
     private int yPos;
     private LightState lightState = LightState.GREEN;
+    private boolean isPaused, terminate;
+    private double timeRemainingSec;
+    Random rand;
 
     public AnimatedLight(int x, int y) {
         xPos = x;
         yPos = y;
+        this.isPaused = false;
+        rand = new Random();
+        timeRemainingSec = rand.nextInt(11) + 5;
+        terminate = false;
     }
 
     @Override
     public void run() {
-        // TODO Every cycle, a time is randomly generated between [5, 15] seconds. This is the time before the light turns red.
-        // TODO Every cycle, a time is randomly generated between [2, 5] seconds. This is the time the light stays red.
-        // TODO The light starts green, changes to yellow 3 seconds before it turns red, then turns green and restarts again.
-        throw new UnsupportedOperationException("Unimplemented method 'run'");
+        while (true) {
+            if (terminate) {
+                break;
+            }
+
+            if (!isPaused) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                }
+
+                timeRemainingSec -= 0.10;
+
+                if (timeRemainingSec < 0.01) {
+                    switch (lightState) {
+                        case GREEN:
+                            lightState = LightState.YELLOW;
+                            timeRemainingSec = 3.0;
+                            break;
+                        case YELLOW:
+                            lightState = LightState.RED;
+                            timeRemainingSec = (double) rand.nextInt(3) + 3.0;
+                            break;
+                        case RED:
+                            lightState = LightState.GREEN;
+                            timeRemainingSec = (double) rand.nextInt(11) + 5.0;
+                            break;
+                        default:
+                            System.out.println("Default case on light switch happened. Should ever happen...");
+                            timeRemainingSec = 1.0;
+                            break;
+                    }
+                }
+            }
+        }
+    }
+
+    public void pause() {
+        while (!isPaused) {
+            isPaused = true;
+        }
+    }
+
+    public void unpause() {
+        while (isPaused) {
+            isPaused = false;
+        }
+
+    }
+
+    public void terminate() {
+        terminate = true;
+        unpause();
     }
 
     public int getxPos() {

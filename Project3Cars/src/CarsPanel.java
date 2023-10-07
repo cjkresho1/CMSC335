@@ -5,6 +5,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
@@ -14,13 +17,17 @@ import javax.swing.event.EventListenerList;
 
 // TODO Document
 
-public class CarsPanel extends JPanel implements ChangeListener {
+public class CarsPanel extends JPanel implements ChangeListener, Runnable {
     // Stores a list of all cars currently in the program
     private ArrayList<AnimatedCar> cars;
     private ArrayList<AnimatedLight> lights;
+    private ArrayList<Thread> carThreads, lightThreads;
     private ButtonsPanel sourcePanel;
     private ChangeEvent changeEvent = null;
     private EventListenerList listenerList = new EventListenerList();
+    private boolean paused, running;
+
+    private final Lock lock = new ReentrantLock();
 
     private static final int CAR_SPACING_PIXELS = 100;
     private static final int CAR_VERT_START_PIXELS = 50;
@@ -43,6 +50,11 @@ public class CarsPanel extends JPanel implements ChangeListener {
 
         cars = new ArrayList<AnimatedCar>();
         lights = new ArrayList<AnimatedLight>();
+        carThreads = new ArrayList<Thread>();
+        lightThreads = new ArrayList<Thread>();
+
+        paused = false;
+        running = false;
 
         Random rand = new Random();
         try {
@@ -60,19 +72,43 @@ public class CarsPanel extends JPanel implements ChangeListener {
     }
 
     @Override
+    public void run() {
+        for (int i = 0; i < lights.size(); i++) {
+            AnimatedLight curLight = lights.get(i);
+            Thread tempThread = new Thread(curLight, "Light Thread " + i);
+            lightThreads.add(tempThread);
+        }
+
+        for (int i = 0; i < cars.size(); i++ ) {
+            AnimatedCar curCar = cars.get(i);
+            Thread tempThread = new Thread(curCar, "Car Thread " + i);
+            carThreads.add(tempThread);
+        }
+
+        while(true) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+            }
+            repaint();
+        }
+    }
+
+    @Override
     public void stateChanged(ChangeEvent e) {
+        // First, aquire the lock so that the panel won't attempt to paint as we're removing and adding elements to the arrays
+        try {
+            lock.tryLock(5, TimeUnit.SECONDS);
+        } catch (InterruptedException exception) {
+            return;
+        }
         // If there are less cars then specified, add more cars to make up for it.
         Random rand = new Random();
-        System.out.println("Pre-change:");
-        System.out.println("cars.size(): " + cars.size());
-        System.out.println("sourcePanel.getNumCars(): " + sourcePanel.getNumCars());
-        System.out.println("lights.size(): " + lights.size());
-        System.out.println("sourcePanel.getNumLights(): " + sourcePanel.getNumLights());
         for (int i = cars.size(); i < sourcePanel.getNumCars(); i++)
         {
             try {
                 cars.add(new AnimatedCar(0, ((i * CAR_SPACING_PIXELS) + CAR_VERT_START_PIXELS), (rand.nextDouble() * CAR_MAX_SPEED_PIXELS),
-                            true));
+                            sourcePanel.isPaused()));
             } catch (IOException e1) {
                 System.out.println("Error getting car image file.");
             }
@@ -95,17 +131,83 @@ public class CarsPanel extends JPanel implements ChangeListener {
         {
             lights.remove(i - 1);
         }
-        // TODO Lights and Cars all pause and start when needed
-
-        System.out.println("Post-change:");
-        System.out.println("cars.size(): " + cars.size());
-        System.out.println("sourcePanel.getNumCars(): " + sourcePanel.getNumCars());
-        System.out.println("lights.size(): " + lights.size());
-        System.out.println("sourcePanel.getNumLights(): " + sourcePanel.getNumLights() + System.lineSeparator());
         
+        // TODO Lights and Cars all pause and start when needed
+        if (!running && sourcePanel.isRunning()) {
+            startHelper();
+            running = true;
+            paused = false;
+        }
+        else if (running && !sourcePanel.isRunning()) {
+            reset();
+            running = false;
+            paused = false;
+        }
+        else if (!paused && sourcePanel.isPaused()) {
+            pause();
+            paused = true;
+        }
+        else if (paused && !sourcePanel.isPaused()) {
+            unpause();
+            paused = false;
+        }
+
+        // Finally release the lock
+        lock.unlock();
+
         repaint();
         setSize(getPreferredSize());
         fireStateChanged();
+    }
+
+    private void reset() {
+
+        // Remove all existing lights, terminating their threads first
+        for (int i = lights.size() - 1; i >= 0; i--) {
+            AnimatedLight curLight = lights.get(i);
+            curLight.terminate();
+            lights.remove(i);
+        }
+
+        lightThreads = new ArrayList<Thread>();
+
+        // Add in new lights (resets to green and resets timers)
+        for (int i = 0; i < sourcePanel.getNumLights(); i++) {
+            lights.add(new AnimatedLight(((i * LIGHT_SPACING_PIXELS) + LIGHT_HORI_START_PIXELS), 0));
+        }
+
+        // Set back up threads for the lights
+        for (int i = 0; i < lights.size(); i++) {
+            AnimatedLight curLight = lights.get(i);
+            Thread tempThread = new Thread(curLight, "Light Thread " + i);
+            lightThreads.add(tempThread);
+        }
+
+        // TODO Destry and recreat car threads
+    }
+
+    private void pause() {
+        for (AnimatedLight curLight : lights) {
+            curLight.pause();
+        }
+
+        // TODO Add car pausing
+    }
+
+    private void unpause() {
+        for (AnimatedLight curLight : lights) {
+            curLight.unpause();
+        }
+
+        // TODO Add car unpausing
+    }
+
+    private void startHelper() {
+        for (Thread curThread : lightThreads) {
+            curThread.start();
+        }
+
+        // TODO Add car Thread starter
     }
 
     @Override
@@ -123,6 +225,12 @@ public class CarsPanel extends JPanel implements ChangeListener {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
+        // If the lock cannot be aquired, then a reset is in progress, check back later
+        if (!lock.tryLock())
+        {
+            return;
+        }
+
         // For each car, paint it where it shows up on the panel
         for (int i = 0; i < cars.size(); i++) {
             AnimatedCar curCar = cars.get(i);
@@ -130,18 +238,17 @@ public class CarsPanel extends JPanel implements ChangeListener {
         }
 
         // For each light, paint a circle of the specified color where it shows up on the panel
-        // TODO paint a line that indicates the location of each light???
         for (int i = 0; i < lights.size(); i++) {
             AnimatedLight curLight = lights.get(i);
             switch (curLight.getLightState()) {
                 case GREEN:
                     g.setColor(Color.GREEN);
                     break;
-                case RED:
-                    g.setColor(Color.RED);
-                    break;
                 case YELLOW:
                     g.setColor(Color.YELLOW);
+                    break;
+                case RED:
+                    g.setColor(Color.RED);
                     break;
                 default:
                     System.out.println("Default case on light switch happened. Should ever happen...");
@@ -159,13 +266,15 @@ public class CarsPanel extends JPanel implements ChangeListener {
             carImgWidth = ImageIO.read(new File(AnimatedCar.getCarImageLocation())).getWidth();
             carImgHeight = ImageIO.read(new File(AnimatedCar.getCarImageLocation())).getHeight();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            System.out.println("Car image couldn't be loaded.");
         }
         for (int i = 0; i < lights.size() + 2; i++) {
             g.drawLine((carImgWidth + (i * LIGHT_SPACING_PIXELS)), carImgHeight,
                     (carImgWidth + (i * LIGHT_SPACING_PIXELS)), (int) windowSize.getHeight());
         }
+
+        // Finally, release the lock to indicate the painting is over
+        lock.unlock();
     }
 
     /*

@@ -1,6 +1,9 @@
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.imageio.ImageIO;
 
@@ -11,33 +14,70 @@ public class AnimatedCar implements Runnable {
     private double xPos;
     private double yPos;
     private double xVelocity;
-    private boolean isMoving;
+    private boolean isPaused, terminate;
     private static final String CAR_IMAGE_LOCATION = "imageFiles" + File.separator + "car.png";
+    private final Lock lock = new ReentrantLock();
+    private final Condition notPaused = lock.newCondition();
 
     /**
      * Create a new AnimatedCar
      * @param x Starting y position of the car
      * @param y Starting y position of the car
      * @param velocity Rate at which the car will left and right (positive = left; negative = right)
-     * @param isMoving True if the car should start moving, false if the car should be stationary
+     * @param isPaused
      * @throws IOException
      */
-    public AnimatedCar(int x, int y, double velocity, boolean isMoving) throws IOException {
+    public AnimatedCar(int x, int y, double velocity, boolean isPaused) throws IOException {
         xPos = x;
         yPos = y;
         xVelocity = velocity;
-        this.isMoving = isMoving;
+        this.isPaused = isPaused;
         car = ImageIO.read(new File(CAR_IMAGE_LOCATION));
+        terminate = false;
     }
 
     @Override
     public void run() {
-        // TODO Add internal timer to move the car right every, like, 100ms
         while (true) {
-            if (isMoving) {
-                xPos += xVelocity;
+            if (terminate) {
+                break;
             }
+            if (isPaused) {
+                try {
+                    while (isPaused) {
+                        notPaused.await();
+                    }
+                } catch (InterruptedException e) {
+                }
+            }
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+            }
+
+            xPos += xVelocity;
         }
+    }
+
+    public void pause() {
+        while (!isPaused) {    
+            lock.tryLock();
+            isPaused = true;
+        }
+    }
+
+    public void unpause() {
+        while (isPaused) {
+            isPaused = false;
+            notPaused.notifyAll();
+            lock.unlock();
+        }
+        
+    }
+
+    public void terminate() {
+        terminate = true;
+        unpause();
     }
 
     public BufferedImage getCar() {
@@ -68,17 +108,15 @@ public class AnimatedCar implements Runnable {
         this.xVelocity = xVelocity;
     }
 
-    public boolean isMoving() {
-        return isMoving;
+    public boolean isPaused() {
+        return isPaused;
     }
 
-    public void setMoving(boolean isMoving) {
-        this.isMoving = isMoving;
+    public void setMoving(boolean isPaused) {
+        this.isPaused = isPaused;
     }
 
     public static String getCarImageLocation() {
         return CAR_IMAGE_LOCATION;
     }
-
-    
 }
