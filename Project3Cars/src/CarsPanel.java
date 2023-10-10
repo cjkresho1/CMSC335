@@ -1,6 +1,7 @@
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,27 +25,32 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
     private ArrayList<Thread> carThreads, lightThreads;
     private ButtonsPanel sourcePanel;
     private ChangeEvent changeEvent = null;
-    private EventListenerList listenerList = new EventListenerList();
+    private EventListenerList windowListenerList = new EventListenerList();
+    private EventListenerList carListenerList = new EventListenerList();
     private boolean paused, running;
+    private int finishLinePixel;
 
     private final Lock lock = new ReentrantLock();
 
     private static final int CAR_SPACING_PIXELS = 100;
-    private static final int CAR_VERT_START_PIXELS = 50;
-    private static final int LIGHT_SPACING_PIXELS = 200;
+    private static int CAR_VERT_START_PIXELS;
+    private static final int LIGHT_SPACING_PIXELS = 200; // This # pixels = 1000m 
     private static int LIGHT_HORI_START_PIXELS;
     private static final int STOP_LIGHT_DIAMETER = 10;
-    private static final int CAR_MAX_SPEED_PIXELS = 5;
+    private static final int CAR_MAX_SPEED_PIXELS = 40; // This (# * 1000 / LIGHT_SPACING_PIXELS) = m/s
+    private static final int CAR_MIN_SPEED_PIXELS = 20;// This (# * 1000 / LIGHT_SPACING_PIXELS) = m/s
+    private static final double REFRESH_RATE = 144.0;
 
     public CarsPanel(ButtonsPanel source) {
 
         try {
-            LIGHT_HORI_START_PIXELS = LIGHT_SPACING_PIXELS
-                    + ImageIO.read(new File(AnimatedCar.getCarImageLocation())).getWidth();
+            BufferedImage img = ImageIO.read(new File(AnimatedCar.getCarImageLocation()));
+            LIGHT_HORI_START_PIXELS = LIGHT_SPACING_PIXELS + img.getWidth();
+            CAR_VERT_START_PIXELS = img.getWidth();
         } catch (IOException e) {
             System.out.println("Error getting car image.");
         }
-        
+
         sourcePanel = source;
         sourcePanel.addChangeListener(this);
 
@@ -56,18 +62,16 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
         paused = false;
         running = false;
 
-        Random rand = new Random();
-        try {
-            for (int i = 0; i < source.getNumCars(); i++) {
-                cars.add(new AnimatedCar(0, ((i * CAR_SPACING_PIXELS) + CAR_VERT_START_PIXELS), ((rand.nextDouble() * (CAR_MAX_SPEED_PIXELS - 1)) + 1)));
-            }
-        } catch (IOException e) {
-            System.out.println("Error getting car image.");
+        int carImgWidth = LIGHT_HORI_START_PIXELS - LIGHT_SPACING_PIXELS;
+        finishLinePixel = (carImgWidth + ((source.getNumLights() + 1) * LIGHT_SPACING_PIXELS));
+
+        for (int i = 0; i < source.getNumCars(); i++) {
+            cars.add(carFactory(i));
         }
 
         for (int i = 0; i < source.getNumLights(); i++) {
-            lights.add(new AnimatedLight(((i * LIGHT_SPACING_PIXELS) + LIGHT_HORI_START_PIXELS), 0));
-        }
+            lights.add(lightFactory(i));
+        }        
     }
 
     @Override
@@ -78,15 +82,15 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
             lightThreads.add(tempThread);
         }
 
-        for (int i = 0; i < cars.size(); i++ ) {
+        for (int i = 0; i < cars.size(); i++) {
             AnimatedCar curCar = cars.get(i);
             Thread tempThread = new Thread(curCar, "Car Thread " + i);
             carThreads.add(tempThread);
         }
 
-        while(true) {
+        while (true) {
             try {
-                Thread.sleep(100);
+                Thread.sleep((long) (1000.0 / REFRESH_RATE));
             } catch (InterruptedException e) {
             }
             repaint();
@@ -103,62 +107,71 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
         }
 
         // If there are less cars then specified, add more cars to make up for it.
-        Random rand = new Random();
-        for (int i = cars.size(); i < sourcePanel.getNumCars(); i++)
-        {
-            try {
-                AnimatedCar tempCar = new AnimatedCar(0, ((i * CAR_SPACING_PIXELS) + CAR_VERT_START_PIXELS), ((rand.nextDouble() * (CAR_MAX_SPEED_PIXELS - 1)) + 1));
-                cars.add(tempCar);
-                Thread tempThread = new Thread(tempCar, "Car Thread " + i);
-                carThreads.add(tempThread);
-            } catch (IOException e1) {
-                System.out.println("Error getting car image file.");
+        for (int i = cars.size(); i < sourcePanel.getNumCars(); i++) {
+            AnimatedCar tempCar = carFactory(i);
+            cars.add(tempCar);
+            Thread tempThread = new Thread(tempCar, "Car Thread " + i);
+            if (sourcePanel.isRunning()) {
+                tempThread.start();
             }
-            
+            carThreads.add(tempThread);
+
         }
 
         // If there are more cars than specified, remove ones off the end
-        for (int i = cars.size(); i > sourcePanel.getNumCars(); i--)
-        {
+        for (int i = cars.size(); i > sourcePanel.getNumCars(); i--) {
             cars.get(i - 1).terminate();
             cars.remove(i - 1);
             carThreads.remove(i - 1);
         }
 
+        boolean lightsChanged = lights.size() != sourcePanel.getNumLights();
+
         // If there are less lights than specified, add more lights ot make up for it. 
-        for (int i = lights.size(); i < sourcePanel.getNumLights(); i++)
-        {
-            AnimatedLight tempLight = new AnimatedLight(((i * LIGHT_SPACING_PIXELS) + LIGHT_HORI_START_PIXELS), 0);
+        for (int i = lights.size(); i < sourcePanel.getNumLights(); i++) {
+            AnimatedLight tempLight = lightFactory(i);
             lights.add(tempLight);
             Thread tempThread = new Thread(tempLight, "Light Thread " + i);
+            if (sourcePanel.isRunning()) {
+                tempThread.start();
+            }
             lightThreads.add(tempThread);
         }
 
         // If there are more lights than specified, remove ones off the end
-        for (int i = lights.size(); i > sourcePanel.getNumLights(); i--)
-        {
+        for (int i = lights.size(); i > sourcePanel.getNumLights(); i--) {
             lights.get(i - 1).terminate();
             lights.remove(i - 1);
             lightThreads.remove(i - 1);
         }
-        
+
+        if (lightsChanged) {
+            fireFinishLightChanged();
+            for (int i = 0; i < carThreads.size(); i++) {
+                Thread curThread = carThreads.get(i);
+                if (!curThread.isAlive()) {
+                    curThread = new Thread(cars.get(i));
+                    carThreads.remove(i);
+                    carThreads.add(i, curThread);
+                    curThread.start();
+                }
+            }
+        }
+
         // If the simulation has been starteed/stopped/paused/unpaused, call helper method
         if (!running && sourcePanel.isRunning()) {
             startHelper();
             running = true;
             paused = false;
-        }
-        else if (running && !sourcePanel.isRunning()) {
-            reset();
+        } else if (running && !sourcePanel.isRunning()) {
+            resetHelper();
             running = false;
             paused = false;
-        }
-        else if (!paused && sourcePanel.isPaused()) {
-            pause();
+        } else if (!paused && sourcePanel.isPaused()) {
+            pauseHelper();
             paused = true;
-        }
-        else if (paused && !sourcePanel.isPaused()) {
-            unpause();
+        } else if (paused && !sourcePanel.isPaused()) {
+            unpauseHelper();
             paused = false;
         }
 
@@ -167,10 +180,10 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
 
         repaint();
         setSize(getPreferredSize());
-        fireStateChanged();
+        firePanelChanged();
     }
 
-    private void reset() {
+    private void resetHelper() {
 
         // Remove all existing lights, terminating their threads first
         for (int i = lights.size() - 1; i >= 0; i--) {
@@ -183,7 +196,7 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
 
         // Add in new lights (resets to green and resets timers)
         for (int i = 0; i < sourcePanel.getNumLights(); i++) {
-            lights.add(new AnimatedLight(((i * LIGHT_SPACING_PIXELS) + LIGHT_HORI_START_PIXELS), 0));
+            lights.add(lightFactory(i));
         }
 
         // Set back up threads for the lights
@@ -203,13 +216,8 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
         carThreads = new ArrayList<Thread>();
 
         // Add in new cars (moves to 0 and resets speeds)
-        Random rand = new Random();
-        try {
-            for (int i = 0; i < sourcePanel.getNumCars(); i++) {
-                cars.add(new AnimatedCar(0, ((i * CAR_SPACING_PIXELS) + CAR_VERT_START_PIXELS), ((rand.nextDouble() * (CAR_MAX_SPEED_PIXELS - 1)) + 1)));
-            }
-        } catch (IOException e) {
-            System.out.println("Error getting car image.");
+        for (int i = 0; i < sourcePanel.getNumCars(); i++) {
+            cars.add(carFactory(i));
         }
 
         // Set back up threads for the lights
@@ -220,7 +228,7 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
         }
     }
 
-    private void pause() {
+    private void pauseHelper() {
         for (AnimatedLight curLight : lights) {
             curLight.pause();
         }
@@ -230,7 +238,7 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
         }
     }
 
-    private void unpause() {
+    private void unpauseHelper() {
         for (AnimatedLight curLight : lights) {
             curLight.unpause();
         }
@@ -250,6 +258,32 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
         }
     }
 
+    private AnimatedCar carFactory(int carNum) {
+        Random rand = new Random();
+        try {
+            int y = ((carNum * CAR_SPACING_PIXELS) + CAR_VERT_START_PIXELS);
+            double velocity = ((rand.nextDouble() * (CAR_MIN_SPEED_PIXELS))
+                    + CAR_MAX_SPEED_PIXELS - CAR_MIN_SPEED_PIXELS);
+
+            AnimatedCar tempCar = new AnimatedCar(0, y, velocity, finishLinePixel);
+
+            for (AnimatedLight curLight : lights) {
+                curLight.addChangeListener(tempCar);
+            }
+
+            addFinishLightListener(tempCar);
+            return tempCar; 
+        } catch (IOException e) {
+            System.out.println("Couldn't get car image.");
+        }
+
+        return null;
+    }
+
+    private AnimatedLight lightFactory(int lightNum) {
+        return new AnimatedLight(((lightNum * LIGHT_SPACING_PIXELS) + LIGHT_HORI_START_PIXELS), 0);
+    }
+
     @Override
     public Dimension getPreferredSize() {
         int x = LIGHT_HORI_START_PIXELS + 10;
@@ -266,8 +300,7 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
         super.paintComponent(g);
 
         // If the lock cannot be aquired, then a reset is in progress, check back later
-        if (!lock.tryLock())
-        {
+        if (!lock.tryLock()) {
             return;
         }
 
@@ -300,16 +333,9 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
 
         g.setColor(Color.BLACK);
         Dimension windowSize = getPreferredSize();
-        int carImgHeight = 50;
-        int carImgWidth = 100;
-        try {
-            carImgWidth = ImageIO.read(new File(AnimatedCar.getCarImageLocation())).getWidth();
-            carImgHeight = ImageIO.read(new File(AnimatedCar.getCarImageLocation())).getHeight();
-        } catch (IOException e) {
-            System.out.println("Car image couldn't be loaded.");
-        }
+        int carImgWidth = LIGHT_HORI_START_PIXELS - LIGHT_SPACING_PIXELS;
         for (int i = 0; i < lights.size() + 2; i++) {
-            g.drawLine((carImgWidth + (i * LIGHT_SPACING_PIXELS)), carImgHeight,
+            g.drawLine((carImgWidth + (i * LIGHT_SPACING_PIXELS)), CAR_VERT_START_PIXELS,
                     (carImgWidth + (i * LIGHT_SPACING_PIXELS)), (int) windowSize.getHeight());
         }
 
@@ -317,20 +343,47 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
         lock.unlock();
     }
 
+    public int getFinishLinePixel() {
+        return finishLinePixel;
+    }
+
     /*
      * The rest of this is event handling code copied from
      * DefaultBoundedRangeModel.
      */
-    public void addChangeListener(ChangeListener l) {
-        listenerList.add(ChangeListener.class, l);
+    public void addWindowListener(ChangeListener l) {
+        windowListenerList.add(ChangeListener.class, l);
     }
 
-    public void removeChangeListener(ChangeListener l) {
-        listenerList.remove(ChangeListener.class, l);
+    public void removeWindowListener(ChangeListener l) {
+        windowListenerList.remove(ChangeListener.class, l);
     }
 
-    protected void fireStateChanged() {
-        Object[] listeners = listenerList.getListenerList();
+    protected void firePanelChanged() {
+        Object[] listeners = windowListenerList.getListenerList();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == ChangeListener.class) {
+                if (changeEvent == null) {
+                    changeEvent = new ChangeEvent(this);
+                }
+                ((ChangeListener) listeners[i + 1]).stateChanged(changeEvent);
+            }
+        }
+    }
+
+    // This is modified from the above method
+
+    public void addFinishLightListener(ChangeListener l) {
+        carListenerList.add(ChangeListener.class, l);
+    }
+
+    public void removeFinishLightListener(ChangeListener l) {
+        carListenerList.remove(ChangeListener.class, l);
+    }
+    protected void fireFinishLightChanged() {
+        int carImgWidth = LIGHT_HORI_START_PIXELS - LIGHT_SPACING_PIXELS;
+        finishLinePixel = (carImgWidth + ((lights.size() + 1) * LIGHT_SPACING_PIXELS));
+        Object[] listeners = carListenerList.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i] == ChangeListener.class) {
                 if (changeEvent == null) {

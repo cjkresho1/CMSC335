@@ -23,7 +23,7 @@ public class Project3Runner implements ChangeListener {
         buttons = new ButtonsPanel();
         cars = new CarsPanel(buttons);
 
-        cars.addChangeListener(this);
+        cars.addWindowListener(this);
 
         mainPane = new JPanel();
         mainPane.setLayout(new BoxLayout(mainPane, BoxLayout.PAGE_AXIS));
