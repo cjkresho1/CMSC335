@@ -2,8 +2,11 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -11,7 +14,7 @@ import javax.swing.event.EventListenerList;
 
 // TODO Document
 // TODO Add a ticking clock to the top of the panel (add an extra row for it)
-public class ButtonsPanel extends JPanel {
+public class ButtonsPanel extends JPanel implements Runnable {
 
     private int numCars = 1;
     private int numLights = 3;
@@ -20,14 +23,22 @@ public class ButtonsPanel extends JPanel {
     private ChangeEvent changeEvent = null;
     private EventListenerList listenerList = new EventListenerList();
 
-    private JPanel topPanel, bottomPanel;
+    private JPanel topPanel, middlePanel, bottomPanel;
     private JButton startStopButton, pauseResumeButton, addCarButton, removeCarButton, addLightButton,
             removeLightButton;
+    private JLabel clockLabel;
+
 
     private static final int MAX_CARS = 3;
     private static final int MAX_LIGHTS = 5;
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("h:mm:ss a");
+    
 
-    public ButtonsPanel() {
+    public ButtonsPanel()  {
+
+        // Create the clock label
+        clockLabel = new JLabel(getCurrentTime());
+
         // Create the buttons
         startStopButton = new JButton("Start");
         startStopButton.addActionListener(new StartStopHandeler());
@@ -55,19 +66,43 @@ public class ButtonsPanel extends JPanel {
         setLayout(layout);
 
         topPanel = new JPanel();
+        middlePanel = new JPanel();
         bottomPanel = new JPanel();
         topPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        middlePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
         bottomPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 
-        topPanel.add(startStopButton);
-        topPanel.add(pauseResumeButton);
+        topPanel.add(clockLabel);
+        middlePanel.add(startStopButton);
+        middlePanel.add(pauseResumeButton);
         bottomPanel.add(addCarButton);
         bottomPanel.add(removeCarButton);
         bottomPanel.add(addLightButton);
         bottomPanel.add(removeLightButton);
 
         add(topPanel);
+        add(middlePanel);
         add(bottomPanel);
+
+        Thread thread = new Thread(this, "Button Pannel Thread");
+        thread.start();
+    }
+
+    @Override
+    public void run() {
+        while(true) {
+            try {
+                Thread.sleep(250);
+            } catch (InterruptedException e) {
+            }
+            
+            clockLabel.setText(getCurrentTime());
+        }
+    }
+
+    private String getCurrentTime() {
+        LocalDateTime date = LocalDateTime.now();
+        return "Current time: " + date.format(TIME_FORMATTER);
     }
 
     public int getNumCars() {
