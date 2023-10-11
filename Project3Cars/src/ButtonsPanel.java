@@ -1,3 +1,10 @@
+
+/**
+ * ButtonsPanel.java
+ * Date: 10.10.23
+ * @author Charles Kresho
+ * Purpose: A panel that has all the buttons (and a timer) needed to run the CarPanel. Starts its own thread for the timer.
+ */
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -12,29 +19,43 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.EventListenerList;
 
-// TODO Document
-// TODO Add a ticking clock to the top of the panel (add an extra row for it)
 public class ButtonsPanel extends JPanel implements Runnable {
 
+    // Have default values of 1 car and 3 lights, and a state of stoped
     private int numCars = 1;
     private int numLights = 3;
     private boolean running = false;
     private boolean paused = false;
+
+    // Event listener stuff
     private ChangeEvent changeEvent = null;
     private EventListenerList listenerList = new EventListenerList();
 
+    // Button panel swing elements
     private JPanel topPanel, middlePanel, bottomPanel;
     private JButton startStopButton, pauseResumeButton, addCarButton, removeCarButton, addLightButton,
             removeLightButton;
     private JLabel clockLabel;
 
-
+    /**
+     * Maximum amount of cars in the simulation.
+     */
     private static final int MAX_CARS = 3;
-    private static final int MAX_LIGHTS = 5;
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("h:mm:ss a");
-    
 
-    public ButtonsPanel()  {
+    /**
+     * Maximum amount of lights in the simulation.
+     */
+    private static final int MAX_LIGHTS = 5;
+
+    /**
+     * Formatter for the current time stamp.
+     */
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("h:mm:ss a");
+
+    /**
+     * Create a new ButtonsPanel.
+     */
+    public ButtonsPanel() {
 
         // Create the clock label
         clockLabel = new JLabel(getCurrentTime());
@@ -84,35 +105,70 @@ public class ButtonsPanel extends JPanel implements Runnable {
         add(middlePanel);
         add(bottomPanel);
 
+        // Start the clock ticking
         Thread thread = new Thread(this, "Button Pannel Thread");
         thread.start();
     }
 
     @Override
     public void run() {
-        while(true) {
+        // Let the clock tick forever and ever and ever...
+        while (true) {
             try {
+                // Updates every quarter second for slightly more accurate ticks to the system clock
                 Thread.sleep(250);
             } catch (InterruptedException e) {
             }
-            
+
             clockLabel.setText(getCurrentTime());
         }
     }
 
+    /**
+     * Helper method to get the current time as a string.
+     * @return Current time as a formatted string.
+     */
     private String getCurrentTime() {
         LocalDateTime date = LocalDateTime.now();
         return "Current time: " + date.format(TIME_FORMATTER);
     }
 
+    /**
+     * Get the number of cars in the simulation.
+     * @return Number of cars in the simulation.
+     */
     public int getNumCars() {
         return numCars;
     }
 
+    /**
+     * Get the number of lights in the simluation.
+     * @return number of lights in the simulation.
+     */
     public int getNumLights() {
         return numLights;
     }
 
+    /**
+     * Is the simulation paused.
+     * @return if the simulation is paused or not.
+     */
+    public boolean isPaused() {
+        return paused;
+    }
+
+    /**
+     * Is the simulation running or stopped.
+     * @return if the simulation is running or stopped.
+     */
+    public boolean isRunning() {
+        return running;
+    }
+
+    /**
+     * Updates the pause button and the pause/running flags when the stop/start button is pressed.
+     * Fires an update to listeners.
+     */
     private class StartStopHandeler implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             if (running) {
@@ -133,6 +189,10 @@ public class ButtonsPanel extends JPanel implements Runnable {
         }
     }
 
+    /**
+     * Pauses and unpauses the simulation.
+     * Fire an update to listeners.
+     */
     private class PauseResumeHandeler implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             if (paused) {
@@ -147,6 +207,10 @@ public class ButtonsPanel extends JPanel implements Runnable {
         }
     }
 
+    /**
+     * Increase the number of simulated cars, up to the max.
+     * Fires an update to listeners.
+     */
     private class AddCarHandeler implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             numCars = Math.min(MAX_CARS, numCars + 1);
@@ -154,6 +218,10 @@ public class ButtonsPanel extends JPanel implements Runnable {
         }
     }
 
+    /**
+     * Decrease the number of simulated cars.
+     * Fires an update to listeners.
+     */
     private class RemoveCarHandeler implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             numCars = Math.max(0, numCars - 1);
@@ -161,6 +229,10 @@ public class ButtonsPanel extends JPanel implements Runnable {
         }
     }
 
+    /**
+     * Increase the number of simulated lights, up to the max.
+     * Fires an update to listeners.
+     */
     private class AddLightHandeler implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             numLights = Math.min(MAX_LIGHTS, numLights + 1);
@@ -168,19 +240,15 @@ public class ButtonsPanel extends JPanel implements Runnable {
         }
     }
 
+    /**
+     * Decrease the number of simulated lights.
+     * Fires an update to listeners.
+     */
     private class RemoveLightHandeler implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             numLights = Math.max(0, numLights - 1);
             fireStateChanged();
         }
-    }
-
-    public boolean isPaused() {
-        return paused;
-    }
-
-    public boolean isRunning() {
-        return running;
     }
 
     /*

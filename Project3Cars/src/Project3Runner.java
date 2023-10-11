@@ -1,3 +1,10 @@
+
+/**
+ * Project3Runner.java
+ * Date: 10.10.23
+ * @author Charles Kresho
+ * Purpose: Project3Runner sets up the inital state of the window, and sets everything spinning in motion.
+ */
 import java.awt.Dimension;
 
 import javax.swing.BorderFactory;
@@ -9,9 +16,6 @@ import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-// TODO Document
-// TODO There shouldn't be a lot more needed here, but let's check just to make sure
-
 public class Project3Runner implements ChangeListener {
     private CarsPanel cars;
     private ButtonsPanel buttons;
@@ -19,12 +23,17 @@ public class Project3Runner implements ChangeListener {
     private static JFrame frame;
     private JPanel mainPane;
 
+    /**
+     * Create a new window with buttons and cars and lights :D (after doing documentation for over 2 hours, I need a smile in my life)
+     */
     public Project3Runner() {
+        // Set up the panels
         buttons = new ButtonsPanel();
         cars = new CarsPanel(buttons);
 
         cars.addWindowListener(this);
 
+        // Set up the window and add the panels to it
         mainPane = new JPanel();
         mainPane.setLayout(new BoxLayout(mainPane, BoxLayout.PAGE_AXIS));
 
@@ -35,6 +44,7 @@ public class Project3Runner implements ChangeListener {
         mainPane.add(cars);
         mainPane.add(Box.createGlue());
 
+        // Make the window visible and start the program running.
         mainPane.setOpaque(true);
         frame.setContentPane(mainPane);
 
@@ -50,18 +60,22 @@ public class Project3Runner implements ChangeListener {
         frame.pack();
     }
 
+    /**
+     * For safety, call this as a new thread. Set up the GUI for the program.
+     */
     private static void createAndShowGUI() {
+        // Attempt to match the look and feel of the window.
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
-            System.out.println("Error setting look and feel");
+            // Why do anything except use the default?
         }
 
         frame = new JFrame("Cars and Stoplights");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         new Project3Runner();
-        
+
     }
 
     public static void main(String[] args) {
