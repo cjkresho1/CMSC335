@@ -65,29 +65,18 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
         int carImgWidth = LIGHT_HORI_START_PIXELS - LIGHT_SPACING_PIXELS;
         finishLinePixel = (carImgWidth + ((source.getNumLights() + 1) * LIGHT_SPACING_PIXELS));
 
-        for (int i = 0; i < source.getNumCars(); i++) {
-            cars.add(carFactory(i));
+        for (int i = 0; i < source.getNumLights(); i++) {
+            lightFactory(i);
         }
 
-        for (int i = 0; i < source.getNumLights(); i++) {
-            lights.add(lightFactory(i));
-        }        
+        for (int i = 0; i < source.getNumCars(); i++) {
+            carFactory(i);
+        }
+
     }
 
     @Override
     public void run() {
-        for (int i = 0; i < lights.size(); i++) {
-            AnimatedLight curLight = lights.get(i);
-            Thread tempThread = new Thread(curLight, "Light Thread " + i);
-            lightThreads.add(tempThread);
-        }
-
-        for (int i = 0; i < cars.size(); i++) {
-            AnimatedCar curCar = cars.get(i);
-            Thread tempThread = new Thread(curCar, "Car Thread " + i);
-            carThreads.add(tempThread);
-        }
-
         while (true) {
             try {
                 Thread.sleep((long) (1000.0 / REFRESH_RATE));
@@ -108,13 +97,7 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
 
         // If there are less cars then specified, add more cars to make up for it.
         for (int i = cars.size(); i < sourcePanel.getNumCars(); i++) {
-            AnimatedCar tempCar = carFactory(i);
-            cars.add(tempCar);
-            Thread tempThread = new Thread(tempCar, "Car Thread " + i);
-            if (sourcePanel.isRunning()) {
-                tempThread.start();
-            }
-            carThreads.add(tempThread);
+            carFactory(i);
 
         }
 
@@ -129,13 +112,8 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
 
         // If there are less lights than specified, add more lights ot make up for it. 
         for (int i = lights.size(); i < sourcePanel.getNumLights(); i++) {
-            AnimatedLight tempLight = lightFactory(i);
-            lights.add(tempLight);
-            Thread tempThread = new Thread(tempLight, "Light Thread " + i);
-            if (sourcePanel.isRunning()) {
-                tempThread.start();
-            }
-            lightThreads.add(tempThread);
+            lightFactory(i);
+
         }
 
         // If there are more lights than specified, remove ones off the end
@@ -153,7 +131,9 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
                     curThread = new Thread(cars.get(i));
                     carThreads.remove(i);
                     carThreads.add(i, curThread);
-                    curThread.start();
+                    if (running) {
+                        curThread.start();
+                    }
                 }
             }
         }
@@ -196,14 +176,7 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
 
         // Add in new lights (resets to green and resets timers)
         for (int i = 0; i < sourcePanel.getNumLights(); i++) {
-            lights.add(lightFactory(i));
-        }
-
-        // Set back up threads for the lights
-        for (int i = 0; i < lights.size(); i++) {
-            AnimatedLight curLight = lights.get(i);
-            Thread tempThread = new Thread(curLight, "Light Thread " + i);
-            lightThreads.add(tempThread);
+            lightFactory(i);
         }
 
         // Remove all existing cars, terminating their threads first
@@ -217,14 +190,7 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
 
         // Add in new cars (moves to 0 and resets speeds)
         for (int i = 0; i < sourcePanel.getNumCars(); i++) {
-            cars.add(carFactory(i));
-        }
-
-        // Set back up threads for the lights
-        for (int i = 0; i < cars.size(); i++) {
-            AnimatedCar curCar = cars.get(i);
-            Thread tempThread = new Thread(curCar, "Car Thread " + i);
-            carThreads.add(tempThread);
+            carFactory(i);
         }
     }
 
@@ -268,11 +234,23 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
             AnimatedCar tempCar = new AnimatedCar(0, y, velocity, finishLinePixel);
 
             for (AnimatedLight curLight : lights) {
+                if (curLight.getLightState() == LightState.RED) {
+                    tempCar.addRedLightLocation(curLight.getxPos() - CAR_VERT_START_PIXELS);
+                }
                 curLight.addChangeListener(tempCar);
             }
 
             addFinishLightListener(tempCar);
-            return tempCar; 
+            cars.add(tempCar);
+            Thread tempThread = new Thread(tempCar, "Car Thread " + carNum);
+            if (sourcePanel.isPaused()) {
+                tempCar.pause();
+            }
+            if (sourcePanel.isRunning()) {
+                tempThread.start();
+            }
+            carThreads.add(tempThread);
+            return tempCar;
         } catch (IOException e) {
             System.out.println("Couldn't get car image.");
         }
@@ -281,7 +259,23 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
     }
 
     private AnimatedLight lightFactory(int lightNum) {
-        return new AnimatedLight(((lightNum * LIGHT_SPACING_PIXELS) + LIGHT_HORI_START_PIXELS), 0);
+        AnimatedLight tempLight = new AnimatedLight(((lightNum * LIGHT_SPACING_PIXELS) + LIGHT_HORI_START_PIXELS), 0);
+
+        for (AnimatedCar curCar : cars) {
+            tempLight.addChangeListener(curCar);
+        }
+
+        lights.add(tempLight);
+        Thread tempThread = new Thread(tempLight, "Light Thread " + lightNum);
+        if (sourcePanel.isPaused()) {
+            tempLight.pause();
+        }
+        if (sourcePanel.isRunning()) {
+            tempThread.start();
+        }
+        lightThreads.add(tempThread);
+
+        return tempLight;
     }
 
     @Override
@@ -380,6 +374,7 @@ public class CarsPanel extends JPanel implements ChangeListener, Runnable {
     public void removeFinishLightListener(ChangeListener l) {
         carListenerList.remove(ChangeListener.class, l);
     }
+
     protected void fireFinishLightChanged() {
         int carImgWidth = LIGHT_HORI_START_PIXELS - LIGHT_SPACING_PIXELS;
         finishLinePixel = (carImgWidth + ((lights.size() + 1) * LIGHT_SPACING_PIXELS));

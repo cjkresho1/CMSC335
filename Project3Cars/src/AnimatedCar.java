@@ -1,3 +1,10 @@
+/**
+ * AnimatedCar.java
+ * Date: 10.10.23
+ * @author Charles Kresho
+ * Purpose: AnimatedCar is essentially a BufferedImage of a car (that I drew) that can move across the screen from left to right at a predetermined pace.
+ *          It also listens for stop lights (and when the number of stop lights change)
+ */
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -51,7 +58,7 @@ public class AnimatedCar implements ChangeListener, Runnable {
             if (terminate) {
                 break;
             }
-            
+
             lock.lock();
             try {
                 while (isPaused) {
@@ -62,13 +69,12 @@ public class AnimatedCar implements ChangeListener, Runnable {
                 } catch (InterruptedException e) {
                 }
 
-                
                 if (xPos >= finishLine) {
                     break;
                 }
 
                 curXVelocity = baseXVelocity;
-            
+
                 for (int stopLoc : stoppingLocs) {
                     // As the car approaches the stop light, this number will approach 0 from the positive side
                     // If the number is positive, the car is in front of the stop light
@@ -110,6 +116,10 @@ public class AnimatedCar implements ChangeListener, Runnable {
             finishLine = carPanel.getFinishLinePixel() - car.getWidth();
             if (xPos > finishLine) {
                 xPos = finishLine;
+            }
+            int finishLineIndex = stoppingLocs.indexOf(finishLine);
+            if (finishLineIndex >= 0) {
+                stoppingLocs.remove(finishLineIndex);
             }
         }
     }
@@ -164,5 +174,9 @@ public class AnimatedCar implements ChangeListener, Runnable {
 
     public static String getCarImageLocation() {
         return CAR_IMAGE_LOCATION;
+    }
+
+    public void addRedLightLocation(int redLightLocPixel) {
+        stoppingLocs.add(redLightLocPixel);
     }
 }
